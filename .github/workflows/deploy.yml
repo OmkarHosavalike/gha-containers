@@ -1,0 +1,48 @@
+name: Deploy app using containers
+on:
+  push:
+    branches:
+      - main
+      - dev
+env:
+  cache_key: node-deps
+  MONGODB_DB_NAME: gha-demo
+jobs:
+  test: 
+    environment: testing
+    runs-on: ubuntu-latest
+    env:
+      MONGODB_CONNECTION_PROTOCOL: mongodb+srv
+      MONGODB_CLUSTER_ADDRESS:
+      MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
+      MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+      PORT: 8080
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+      - name: Cache the deps if does not exists
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: $cache_key-${{ hashFiles(**/package.json) }}
+      - name: Install deps
+        run: npm ci
+      - name: Run the server
+        run: npm start & npx wait-on http://127.0.0.1:$PORT
+      - name: Test the app
+        run: npm test
+      - name: Output secret valuu
+        run: |
+          echo "Username: $MONGODB_USERNAME"
+
+  deploy: 
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output the environment variables
+        env: 
+          PORT: 3000
+        run: |
+          echo "Username: $MONGODB_USERNAME"
+          echo "Database name: $MONGODB_DB_NAME"
+          echo "PORT: $PORT"
