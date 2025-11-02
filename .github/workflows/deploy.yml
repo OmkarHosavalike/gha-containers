@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: $cache_key-${{ hashFiles(**/package.json) }}
+          key: $cache_key-${{ hashFiles('**/package-lock.json') }}
       - name: Install deps
         run: npm ci
       - name: Run the server
